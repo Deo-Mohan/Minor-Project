@@ -1,8 +1,6 @@
-# Minor Project
+# Minor-Project
 
-A project containing two Node.js applications:
-- **drug-info-web**: Web server for drug information
-- **telegram-bot**: Telegram bot application
+MediBot AI is a professional-grade healthcare ecosystem designed to bridge the gap between complex medical data and everyday users. By leveraging Google Gemini AI and the OpenFDA database, it provides a unified platform for medication safety, pill identification, and symptom triage.
 
 ## Project Structure
 
@@ -44,3 +42,4 @@ A project containing two Node.js applications:
 ## License
 
 This project is licensed under the MIT License.
+>>>>>>> 78fad643239467aae5c15473b8edaba989f72196
