@@ -6,9 +6,9 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { translate } = require('@vitalets/google-translate-api');
 const { setupDatabase, getDb } = require('./database.js');
 
-// --- 2. SETUP KEYS ---
-const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || '8076590477:AAHKRo3APLjLwhVPfeH_5pP8m9PBVFFXtoE';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyDr_Y99vNYXucDLVvPiD6AebKghw8wYoWQ';
+// --- 2. SETUP KEYS FROM ENVIRONMENT ---
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 // --- 3. Setup AI and Bot ---
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
