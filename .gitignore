@@ -24,3 +24,9 @@ Thumbs.db
 # Build outputs
 dist/
 build/
+
+# Database and archives
+*.db
+*.zip
+*.sqlite
+*.sqlite3
