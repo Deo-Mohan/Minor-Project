@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediBot AI | Premium Medical Assistant</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        /* --- CORE THEME --- */
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #020617; /* Ultra Dark Slate */
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        /* --- NEW: BACKGROUND NEURAL NETWORK --- */
+        #neuralCanvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; pointer-events: none; opacity: 0.4;
+        }
+
+        /* --- NEW: SCROLL ANIMATIONS --- */
+        .scroll-hidden {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .scroll-hidden.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- PRELOADER --- */
+        #preloader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #020617;
+            z-index: 9999;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 0.5s ease-out;
+        }
+        .heart-rate { width: 150px; height: 70px; position: relative; }
+
+        /* --- GLASS UI --- */
+        .glass-nav {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.3);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        /* 3D Tilt overrides handled by library, but keep hover for fallback */
+        .glass-card:hover {
+            border-color: rgba(59, 130, 246, 0.4);
+            background: rgba(30, 41, 59, 0.6);
+        }
+
+        /* --- SEARCH BOX --- */
+        .search-box-container {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+        .search-box-container:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        }
+
+        /* --- UPDATED CHATBOT STYLES --- */
+    .chat-widget { position: fixed; bottom: 20px; right: 20px; z-index: 80; }
+    
+    #chatWindow {
+        position: fixed; /* Changed from absolute to fixed for easier dragging */
+        bottom: 90px; 
+        right: 20px; 
+        width: 350px; 
+        height: 450px; 
+        min-width: 300px; /* Prevent making it too small */
+        min-height: 300px;
+        background: #1e293b; 
+        border-radius: 20px; 
+        border: 1px solid rgba(255,255,255,0.1); 
+        display: flex; 
+        flex-direction: column; 
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        /* We handle visibility via JS now to avoid conflict with drag coordinates */
+        transition: opacity 0.3s ease; 
+        opacity: 0;
+        pointer-events: none; /* Click-through when hidden */
+    }
+    
+    #chatWindow.chat-visible {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    #chatHeader { cursor: move; user-select: none; } /* Shows move cursor */
+    
+    /* Resize Handle Styling */
+    .resize-handle {
+        position: absolute; bottom: 0; right: 0; width: 20px; height: 20px;
+        background: linear-gradient(135deg, transparent 50%, #3b82f6 50%);
+        cursor: nwse-resize; border-bottom-right-radius: 18px;
+        z-index: 10;
+    }
+
+    .chat-messages { flex: 1; padding: 15px; overflow-y: auto; }
+    .chat-input-area { padding: 10px; background: #0f172a; border-top: 1px solid #334155; display: flex; gap: 5px; }
+    .msg-bubble { padding: 8px 12px; border-radius: 12px; margin-bottom: 8px; font-size: 0.9rem; max-width: 80%; }
+    .msg-user { background: #2563eb; color: white; align-self: flex-end; }
+    .msg-bot { background: #334155; color: #e2e8f0; align-self: flex-start; }
+    .hidden { display: none !important; }
+
+        /* --- NEW: TYPING EFFECT CURSOR --- */
+        #typing-text::after {
+            content: '|';
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* --- NEW: ACCORDION (For FAQ) --- */
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .accordion-open { max-height: 200px; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <canvas id="neuralCanvas"></canvas>
+
+    <div id="preloader">
+        <svg class="heart-rate" viewBox="0 0 150 73" version="1.1" xmlns="http://www.w3.org/2000/svg">
+            <polyline fill="none" stroke="#3b82f6" stroke-width="3" stroke-miterlimit="10" points="0,45.486 38.514,45.486 44.595,33.324 50.676,45.486 57.771,45.486 62.838,55.618 71.959,9 80.067,63.729 84.122,45.486 97.297,45.486 103.379,40.419 110.473,45.486 150,45.486"/>
+        </svg>
+        <div class="mt-4 text-blue-400 font-bold tracking-widest animate-pulse">LOADING SYSTEM...</div>
+    </div>
+
+    <nav class="fixed w-full z-50 glass-nav">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.reload()">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                        <i class="fa-solid fa-robot text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold tracking-tight text-white">MediBot<span class="text-blue-400">AI</span></h1>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 md:gap-3">
+                    <a href="features.html" class="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-blue-600 border border-slate-700 text-slate-200 rounded-lg font-medium transition group">
+                        <i class="fa-solid fa-layer-group text-blue-400 group-hover:text-white"></i>
+                        <span class="hidden sm:inline">Features</span>
+                    </a>
+                    
+                    <button onclick="openFirstAidModal()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition flex items-center gap-2 shadow-lg shadow-emerald-600/20">
+                        <i class="fa-solid fa-kit-medical"></i>
+                        <span class="hidden sm:inline">First Aid</span>
+                    </button>
+
+                    <button onclick="toggleEmergency()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold transition flex items-center gap-2 shadow-lg shadow-red-600/30 animate-pulse">
+                        <i class="fa-solid fa-phone-medical"></i>
+                        <span>SOS</span>
+                    </button>
+
+                    <button onclick="showCabinet()" class="px-3 py-2 bg-slate-800 hover:bg-emerald-600 border border-slate-700 text-slate-200 rounded-lg font-medium transition">
+                        <i class="fa-solid fa-box-open text-emerald-400"></i>
+                    </button>
+
+                    
+                    <a href="https://t.me/MedicalDrugInfo_Bot" target="_blank" class="flex items-center gap-2 px-3 py-2 bg-[#229ED9] hover:bg-[#1c8dbf] text-white rounded-lg font-semibold transition shadow-lg shadow-cyan-500/20 hover:-translate-y-0.5">
+                        <i class="fa-brands fa-telegram text-xl"></i>
+                        <span class="font-bold">Chat</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow pt-36 pb-12 px-4 relative z-10">
+        <div class="max-w-4xl mx-auto text-center scroll-hidden"> 
+            
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-bold tracking-widest uppercase mb-8">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                AI-Powered Healthcare
+            </div>
+
+            <h1 class="text-5xl md:text-7xl font-extrabold text-white mb-6 tracking-tight leading-tight">
+                Medical Intelligence <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Reimagined.</span>
+            </h1>
+            
+            <p class="text-slate-400 text-lg mb-12 h-8 font-mono">
+                <span id="typing-text"></span>
+            </p>
+
+           <div class="max-w-2xl mx-auto relative z-20">
+    <div class="bg-slate-800/80 backdrop-blur border border-slate-700 rounded-2xl flex items-center p-2 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/20 transition-all">
+        <i class="fa-solid fa-stethoscope text-slate-400 ml-4 text-lg"></i>
+        
+        <input type="text" id="searchInput" placeholder="Search drug name (e.g. Aspirin)..." 
+            class="w-full bg-transparent p-4 text-lg text-white placeholder-slate-500 outline-none"
+            onkeypress="if(event.key === 'Enter') searchDrug()">
+        
+        <div class="flex items-center gap-1 pr-1">
+            <button onclick="startVoiceSearch()" class="p-3 text-slate-400 hover:text-white hover:bg-slate-700 rounded-xl transition"><i class="fa-solid fa-microphone"></i></button>
+            <button onclick="document.getElementById('imageInput').click()" class="p-3 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-xl transition"><i class="fa-solid fa-camera"></i></button>
+            <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageUpload()">
+            <button onclick="searchDrug()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg shadow-blue-600/20">Analyze</button>
+        </div>
+    </div>
+</div>
+
+<div id="resultsArea" class="max-w-4xl mx-auto mt-10 grid grid-cols-1 gap-6 px-4"></div>
+        </div>
+
+       <div class="max-w-5xl mx-auto mt-16 grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <div onclick="openInteractionModal()" class="glass-card p-4 rounded-2xl cursor-pointer group border-l-4 border-yellow-500 scroll-hidden md:col-start-2 mx-auto w-full max-w-[240px] h-40 flex flex-col items-center justify-center text-center" data-tilt>
+                <div class="w-10 h-10 rounded-lg bg-yellow-500/10 text-yellow-500 flex items-center justify-center text-lg mb-3 group-hover:bg-yellow-500 group-hover:text-white transition">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h3 class="font-bold text-white text-base">Safety Check</h3>
+                <p class="text-xs text-slate-400 mt-1">Check Interactions</p>
+            </div>
+
+            <div onclick="findPharmacy()" class="glass-card p-4 rounded-2xl cursor-pointer group border-l-4 border-emerald-500 scroll-hidden md:col-start-1 md:row-start-2 mx-auto w-full max-w-[240px] h-40 flex flex-col items-center justify-center text-center" data-tilt>
+                <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-lg mb-3 group-hover:bg-emerald-500 group-hover:text-white transition">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                </div>
+                <h3 class="font-bold text-white text-base">Pharmacy</h3>
+                <p class="text-xs text-slate-400 mt-1">Locate stores</p>
+            </div>
+
+            <div onclick="document.getElementById('imageInput').click()" class="glass-card p-4 rounded-2xl cursor-pointer group border-l-4 border-blue-500 scroll-hidden md:col-start-2 md:row-start-2 mx-auto w-full max-w-[240px] h-40 flex flex-col items-center justify-center text-center bg-slate-800/60" data-tilt>
+                <div class="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center text-lg mb-3 group-hover:bg-blue-500 group-hover:text-white transition">
+                    <i class="fa-solid fa-eye"></i>
+                </div>
+                <h3 class="font-bold text-white text-base">Visual ID</h3>
+                <p class="text-xs text-slate-400 mt-1">Identify pills</p>
+            </div>
+
+            <div onclick="openSymptomChecker()" class="glass-card p-4 rounded-2xl cursor-pointer group border-l-4 border-purple-500 scroll-hidden md:col-start-3 md:row-start-2 mx-auto w-full max-w-[240px] h-40 flex flex-col items-center justify-center text-center" data-tilt>
+                <div class="w-10 h-10 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center text-lg mb-3 group-hover:bg-purple-500 group-hover:text-white transition">
+                    <i class="fa-solid fa-user-doctor"></i>
+                </div>
+                <h3 class="font-bold text-white text-base">Triage</h3>
+                <p class="text-xs text-slate-400 mt-1">Check symptoms</p>
+            </div>
+
+            <div onclick="openBMIModal()" class="glass-card p-4 rounded-2xl cursor-pointer group border-l-4 border-pink-500 scroll-hidden md:col-start-2 md:row-start-3 mx-auto w-full max-w-[240px] h-40 flex flex-col items-center justify-center text-center" data-tilt>
+                <div class="w-10 h-10 rounded-lg bg-pink-500/10 text-pink-500 flex items-center justify-center text-lg mb-3 group-hover:bg-pink-500 group-hover:text-white transition">
+                    <i class="fa-solid fa-weight-scale"></i>
+                </div>
+                <h3 class="font-bold text-white text-base">BMI Calc</h3>
+                <p class="text-xs text-slate-400 mt-1">Health Index</p>
+            </div>
+        </div>
+
+        
+        <div class="max-w-6xl mx-auto mt-32 mb-20 scroll-hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <div class="p-6 bg-slate-800/30 rounded-2xl border border-slate-700/50">
+                    <div class="text-4xl font-bold text-blue-400 mb-2">99%</div>
+                    <div class="text-slate-400 uppercase text-sm tracking-widest font-semibold">Uptime Reliability</div>
+                </div>
+                <div class="p-6 bg-slate-800/30 rounded-2xl border border-slate-700/50">
+                    <div class="text-4xl font-bold text-emerald-400 mb-2">24/7</div>
+                    <div class="text-slate-400 uppercase text-sm tracking-widest font-semibold">AI Availability</div>
+                </div>
+                <div class="p-6 bg-slate-800/30 rounded-2xl border border-slate-700/50">
+                    <div class="text-4xl font-bold text-purple-400 mb-2">FDA</div>
+                    <div class="text-slate-400 uppercase text-sm tracking-widest font-semibold">Verified Data Source</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-3xl mx-auto mb-32 px-4 scroll-hidden">
+            <h2 class="text-3xl font-bold text-center mb-8">Frequently Asked Questions</h2>
+            <div class="space-y-4">
+                <div class="bg-slate-800/40 border border-slate-700 rounded-xl overflow-hidden">
+                    <button class="w-full p-4 text-left font-bold flex justify-between items-center hover:bg-slate-700/50 transition" onclick="this.nextElementSibling.classList.toggle('accordion-open')">
+                        Is my data private? <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content bg-slate-900/50 px-4 text-slate-400 text-sm">
+                        <div class="py-4">Yes. We use a local ID system. Your searches are processed anonymously and never sold.</div>
+                    </div>
+                </div>
+                <div class="bg-slate-800/40 border border-slate-700 rounded-xl overflow-hidden">
+                    <button class="w-full p-4 text-left font-bold flex justify-between items-center hover:bg-slate-700/50 transition" onclick="this.nextElementSibling.classList.toggle('accordion-open')">
+                        Is this medical advice? <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content bg-slate-900/50 px-4 text-slate-400 text-sm">
+                        <div class="py-4">No. MediBot AI is an informational tool. Always consult a real doctor for medical decisions.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div class="chat-widget animate-on-load delay-3">
+        <div id="chatWindow" class="hidden">
+            
+            <div id="chatHeader" class="p-4 bg-blue-600 text-white font-bold flex justify-between rounded-t-xl">
+                <span class="pointer-events-none">💬 MediChat</span>
+                <div class="flex gap-3">
+                    <i class="fa-solid fa-up-right-and-down-left-from-center text-xs opacity-50 mt-1"></i>
+                    <button onclick="toggleChat()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <div id="chatMessages" class="chat-messages flex flex-col custom-scrollbar">
+                <div class="msg-bubble msg-bot">Hello! How can I help with your health?</div>
+            </div>
+
+            <div class="chat-input-area rounded-b-xl">
+                <input type="text" id="chatInput" placeholder="Ask a question..." class="w-full bg-transparent text-white outline-none text-sm" onkeypress="if(event.key === 'Enter') sendMessage()">
+                <button onclick="sendMessage()" class="text-blue-500 hover:text-white"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+
+            <div id="resizeHandle" class="resize-handle"></div>
+        </div>
+
+        <button onclick="toggleChat()" class="w-14 h-14 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl transition hover:scale-110" title="Chat with AI">
+            <i class="fa-solid fa-comment-medical"></i>
+        </button>
+    </div>
+
+    <footer class="border-t border-slate-800 bg-[#020617]/80 backdrop-blur-lg py-10 mt-auto">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="text-center md:text-left">
+                <div class="flex items-center justify-center md:justify-start gap-2 text-white font-bold text-xl mb-2">
+                    <i class="fa-solid fa-plus text-red-600"></i> MediBot<span class="text-blue-500">AI</span>
+                </div>
+                <p class="text-slate-500 text-sm">Industry Standard Healthcare AI.</p>
+            </div>
+            
+            <div class="flex gap-4">
+                <a href="#" class="footer-icon w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-white hover:text-black transition"><i class="fa-brands fa-github text-xl"></i></a>
+               <a href="https://www.linkedin.com/in/krishna-mohan-kumar" target="_blank" class="footer-icon w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white transition">
+    <i class="fa-brands fa-linkedin text-xl"></i>
+</a>
+                <a href="https://t.me/MedicalDrugInfo_Bot" target="_blank" class="footer-icon w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-[#229ED9] hover:text-white transition"><i class="fa-brands fa-telegram text-xl"></i></a>
+            </div>
+
+            <div class="text-slate-500 text-sm text-center md:text-right">
+                <p>Created with <i class="fa-solid fa-heart text-red-500 animate-pulse mx-1"></i> by <span class="text-white font-semibold">Krishna Mohan</span></p>
+                <p class="text-xs mt-1 opacity-70">Powered by Google Gemini 2.5 & OpenFDA</p>
+            </div>
+        </div>
+    </footer>
+
+    <div id="symptomModal" class="modal-overlay fixed inset-0 z-[60] hidden flex items-center justify-center p-4" style="background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
+        <div class="modal-content w-full max-w-lg rounded-2xl p-8 relative bg-[#0f172a] border border-slate-700">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-purple-400 flex items-center gap-3"><i class="fa-solid fa-user-doctor"></i> Symptom Triage</h3>
+                <button onclick="closeModal('symptomModal')" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark fa-lg"></i></button>
+            </div>
+            <textarea id="symptomsInput" rows="4" placeholder="Describe your symptoms..." class="w-full p-3 border border-slate-700 rounded-xl bg-[#0f172a] text-white outline-none"></textarea>
+            <button onclick="checkSymptoms()" class="w-full mt-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold">Analyze Symptoms</button>
+            <div id="symptomResult" class="mt-6 p-4 bg-slate-800/50 rounded-xl hidden text-sm leading-relaxed border border-slate-700 max-h-60 overflow-y-auto custom-scrollbar"></div>
+        </div>
+    </div>
+        <div id="bmiModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="bg-slate-900 w-full max-w-sm rounded-2xl p-8 border border-slate-700 relative">
+            <button onclick="closeModal('bmiModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark fa-lg"></i></button>
+            <h3 class="text-xl font-bold text-pink-400 mb-6 flex items-center gap-2"><i class="fa-solid fa-weight-scale"></i> BMI Calc</h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-slate-400 uppercase font-bold">Height (cm)</label>
+                    <input type="number" id="bmiHeight" placeholder="e.g. 175" class="w-full bg-slate-800 p-3 rounded-xl text-white outline-none border border-slate-700 focus:border-pink-500">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 uppercase font-bold">Weight (kg)</label>
+                    <input type="number" id="bmiWeight" placeholder="e.g. 70" class="w-full bg-slate-800 p-3 rounded-xl text-white outline-none border border-slate-700 focus:border-pink-500">
+                </div>
+            </div>
+
+            <button onclick="calculateBMI()" class="w-full mt-6 py-3 bg-pink-600 hover:bg-pink-500 text-white rounded-xl font-bold transition shadow-lg shadow-pink-600/20">Calculate</button>
+            
+            <div id="bmiResult" class="mt-4 hidden p-4 rounded-xl text-center border"></div>
+        </div>
+    </div>
+    <div id="cabinetModal" class="modal-overlay fixed inset-0 z-[60] hidden flex items-center justify-center p-4" style="background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
+        <div class="modal-content w-full max-w-md rounded-2xl p-8 relative bg-[#0f172a] border border-slate-700">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
+                <h3 class="text-2xl font-bold text-white flex items-center gap-3"><i class="fa-solid fa-box-open text-blue-500"></i> Medicine Cabinet</h3>
+                <button onclick="closeModal('cabinetModal')" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark fa-lg"></i></button>
+            </div>
+            <div id="cabinetList" class="space-y-2 max-h-96 overflow-y-auto pr-2 custom-scrollbar text-white"></div>
+        </div>
+    </div>
+
+    <div id="interactModal" class="modal-overlay fixed inset-0 z-[60] hidden flex items-center justify-center p-4" style="background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
+        <div class="modal-content w-full max-w-md rounded-2xl p-8 relative bg-[#0f172a] border border-slate-700">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-yellow-400 flex items-center gap-3"><i class="fa-solid fa-triangle-exclamation"></i> Safety Check</h3>
+                <button onclick="closeModal('interactModal')" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark fa-lg"></i></button>
+            </div>
+            <div class="space-y-4">
+                <input type="text" id="drug1" placeholder="Drug 1" class="w-full bg-[#0f172a] border border-slate-700 p-3 rounded-xl text-white outline-none">
+                <input type="text" id="drug2" placeholder="Drug 2" class="w-full bg-[#0f172a] border border-slate-700 p-3 rounded-xl text-white outline-none">
+            </div>
+            <button onclick="checkInteraction()" class="w-full mt-6 py-3 bg-yellow-600 hover:bg-yellow-500 text-white rounded-xl font-bold">Check Safety</button>
+            <div id="interactResult" class="mt-6 p-4 bg-slate-800/50 rounded-xl hidden text-sm leading-relaxed border border-slate-700 text-white"></div>
+        </div>
+    </div>
+
+    <div id="emergencyModal" class="modal-overlay fixed inset-0 z-[70] hidden flex items-center justify-center p-4" style="background: rgba(50,0,0,0.9); backdrop-filter: blur(5px);">
+        <div class="modal-content w-full max-w-sm rounded-2xl p-8 text-center border-2 border-red-900 bg-[#1a0505]">
+            <h2 class="text-2xl font-bold text-white mb-6">Emergency Mode</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <a href="tel:102" class="p-4 bg-red-500/10 border border-red-500/30 rounded-xl hover:bg-red-500 hover:text-white transition block text-red-400 font-bold">Ambulance</a>
+                <a href="tel:112" class="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl hover:bg-blue-500 hover:text-white transition block text-blue-400 font-bold">General</a>
+            </div>
+            <button onclick="toggleEmergency()" class="mt-8 text-slate-400 hover:text-white text-sm">Cancel</button>
+        </div>
+    </div>
+    <div id="firstAidModal" class="fixed inset-0 z-[80] hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+        <div class="bg-slate-900 w-full max-w-2xl rounded-2xl border border-slate-700 flex flex-col max-h-[85vh]">
+            
+            <div class="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800/50 rounded-t-2xl">
+                <div>
+                    <h2 class="text-2xl font-bold text-emerald-400 flex items-center gap-2">
+                        <i class="fa-solid fa-briefcase-medical"></i> First Aid Guide
+                    </h2>
+                    <p class="text-slate-400 text-xs mt-1">OFFLINE MODE • QUICK REFERENCE</p>
+                </div>
+                <button onclick="closeModal('firstAidModal')" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark fa-xl"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto custom-scrollbar space-y-6">
+                
+                <div class="bg-red-900/20 border border-red-500/30 rounded-xl p-5">
+                    <h3 class="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                        <span class="bg-red-600 w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span> 
+                        CPR (Cardiac Arrest)
+                    </h3>
+                    <div class="flex flex-col md:flex-row gap-6 items-center">
+                        <div class="w-32 h-32 bg-red-600/10 rounded-full flex items-center justify-center border-4 border-red-500/20 relative shrink-0">
+                            <i class="fa-solid fa-hands-holding-circle text-5xl text-red-500 animate-ping absolute opacity-50"></i>
+                            <i class="fa-solid fa-heart-pulse text-4xl text-white relative z-10"></i>
+                        </div>
+                        <div class="text-slate-300 text-sm space-y-2">
+                            <p><strong><i class="fa-solid fa-check text-emerald-400"></i> Push Hard & Fast:</strong> Center of the chest.</p>
+                            <p><strong><i class="fa-solid fa-stopwatch text-yellow-400"></i> Rate:</strong> 100-120 compressions per minute (Match the beat of "Stayin' Alive").</p>
+                            <p><strong><i class="fa-solid fa-arrow-down text-blue-400"></i> Depth:</strong> At least 2 inches (5 cm) deep.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-orange-900/20 border border-orange-500/30 rounded-xl p-5">
+                    <h3 class="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                        <span class="bg-orange-600 w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span> 
+                        Severe Burns
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-slate-800 p-3 rounded-lg flex items-center gap-3">
+                            <i class="fa-solid fa-faucet-drip text-blue-400 text-2xl"></i>
+                            <span class="text-slate-300 text-sm">Run <strong>COOL water</strong> for 10-20 mins.</span>
+                        </div>
+                        <div class="bg-slate-800 p-3 rounded-lg flex items-center gap-3 border border-red-500/30">
+                            <i class="fa-solid fa-ban text-red-500 text-2xl"></i>
+                            <span class="text-slate-300 text-sm">Do <strong>NOT</strong> use Ice or Butter.</span>
+                        </div>
+                        <div class="bg-slate-800 p-3 rounded-lg flex items-center gap-3 md:col-span-2">
+                            <i class="fa-solid fa-bandage text-slate-400 text-2xl"></i>
+                            <span class="text-slate-300 text-sm">Cover loosely with a clean, dry cloth or bandage.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-blue-900/20 border border-blue-500/30 rounded-xl p-5">
+                    <h3 class="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                        <span class="bg-blue-600 w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span> 
+                        Choking (Heimlich)
+                    </h3>
+                    <div class="text-slate-300 text-sm space-y-3">
+                        <div class="flex gap-3">
+                            <i class="fa-solid fa-1 text-blue-500 font-bold"></i>
+                            <p>Stand behind the person. Wrap arms around waist.</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <i class="fa-solid fa-2 text-blue-500 font-bold"></i>
+                            <p>Make a fist above their navel (belly button).</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <i class="fa-solid fa-3 text-blue-500 font-bold"></i>
+                            <p>Thrust <strong>INWARD</strong> and <strong>UPWARD</strong> quickly.</p>
+                        </div>
+                            <img src="https://encrypted-tbn1.gstatic.com/licensed-image?q=tbn:ANd9GcRziq7wYoThR7lqgoXet4ME_kBGZnEKo94PG0lEOqPBdCBa3bzU1H8lsbPHmAfi-FU2sDk3RS0x49NqprViaFUWXxVV3xVidU10SRvF0gwtZqOGT6c" 
+             alt="Heimlich Maneuver Diagram" 
+             class="w-full h-56 object-contain bg-[#0f172a] rounded-lg mt-4 border border-slate-700/50 p-2">
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="p-4 border-t border-slate-700 bg-slate-800/50 rounded-b-2xl text-center">
+                 <button onclick="toggleEmergency()" class="text-red-400 font-bold hover:text-red-300 transition text-sm">
+                    <i class="fa-solid fa-phone"></i> Call Emergency Services Instead?
+                </button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+
+    <script>
+        // 1. Nuclear Preloader Removal
+        window.addEventListener('load', () => {
+            const preloader = document.getElementById('preloader');
+            setTimeout(() => {
+                preloader.style.opacity = '0';
+                setTimeout(() => {
+                    preloader.style.display = 'none'; 
+                }, 500);
+            }, 500);
+        });
+
+        // 2. Activate 3D Tilt Effect
+        VanillaTilt.init(document.querySelectorAll(".glass-card"), {
+            max: 15,
+            speed: 400,
+            glare: true,
+            "max-glare": 0.2,
+            scale: 1.05
+        });
+
+        // 3. Neural Network Background Animation
+        const canvas = document.getElementById('neuralCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let particles = [];
+        const particleCount = 50; // Adjust for density
+
+        for(let i=0; i<particleCount; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5
+            });
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#3b82f6'; // Blue dots
+            ctx.strokeStyle = 'rgba(59, 130, 246, 0.1)'; // Faint lines
+            
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                
+                // Bounce off edges
+                if(p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if(p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                
+                // Draw dot
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw connections
+                particles.forEach((p2, j) => {
+                    if(i !== j) {
+                        const dx = p.x - p2.x;
+                        const dy = p.y - p2.y;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+                        if(dist < 150) {
+                            ctx.beginPath();
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.stroke();
+                        }
+                    }
+                });
+            });
+            requestAnimationFrame(animateCanvas);
+        }
+        animateCanvas();
+    </script>
+</body>
+</html>

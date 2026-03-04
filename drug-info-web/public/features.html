@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Features - MediBot AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #020617; font-family: 'Plus Jakarta Sans', sans-serif; color: white; }
+        .glass { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+    </style>
+</head>
+<body class="p-6 md:p-12">
+    <a href="/" class="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition">
+        <i class="fa-solid fa-arrow-left"></i> Back to Home
+    </a>
+    
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-4xl font-bold mb-2">Platform Features</h1>
+        <p class="text-slate-400 mb-12">Detailed breakdown of MediBot AI capabilities.</p>
+
+        <div class="space-y-6">
+            <div class="glass p-8 rounded-2xl flex gap-6 items-start">
+                <div class="w-16 h-16 bg-blue-500/10 rounded-xl flex items-center justify-center text-3xl text-blue-500 shrink-0">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold mb-2">Gemini 2.5 Vision AI</h2>
+                    <p class="text-slate-400 leading-relaxed">Our core engine uses Google's latest Multimodal AI. It can read text from medicine labels, identify pills by shape/color, and analyze complex medical leaflets in seconds.</p>
+                </div>
+            </div>
+
+            <div class="glass p-8 rounded-2xl flex gap-6 items-start">
+                <div class="w-16 h-16 bg-yellow-500/10 rounded-xl flex items-center justify-center text-3xl text-yellow-500 shrink-0">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold mb-2">Interaction Safety Engine</h2>
+                    <p class="text-slate-400 leading-relaxed">Prevents dangerous drug combinations. By cross-referencing FDA databases, MediBot alerts you if two medications (e.g., Aspirin and Warfarin) shouldn't be taken together.</p>
+                </div>
+            </div>
+
+            <div class="glass p-8 rounded-2xl flex gap-6 items-start">
+                <div class="w-16 h-16 bg-emerald-500/10 rounded-xl flex items-center justify-center text-3xl text-emerald-500 shrink-0">
+                    <i class="fa-solid fa-database"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold mb-2">OpenFDA Integration</h2>
+                    <p class="text-slate-400 leading-relaxed">Real-time connection to the U.S. Food and Drug Administration. We pull the absolute latest data on side effects, recalls, and black-box warnings.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
