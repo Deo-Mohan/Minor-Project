@@ -1,14 +1,15 @@
 # 🏥 MediBot AI — Next-Gen Medical & Drug Intelligence System
 
-[![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://krishnamohandeo.netlify.app)
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Live_Demo-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://med-ai-lncts.vercel.app/)
 [![Google Gemini AI](https://img.shields.io/badge/Google_Gemini-2.5_Flash-8E75B2?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
 [![OpenFDA API](https://img.shields.io/badge/FDA_Database-OpenFDA-0268B8?style=for-the-badge&logo=usps&logoColor=white)](https://open.fda.gov/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
 ---
 
-## 📌 Project Resources & Documentation Links
+## 📌 Project Resources & Live Demo
 
+* 🚀 **Live Production Web Application:** [https://med-ai-lncts.vercel.app/](https://med-ai-lncts.vercel.app/)
 * 📊 **Project Presentation (Slide Deck):** [View Google Slides PPT](https://docs.google.com/presentation/d/1OejJaCkXxptywICHllaZZquBr0BvTzJn/edit?usp=drive_link&ouid=100102985203872277815&rtpof=true&sd=true)
 * 📄 **Technical Project Documentation:** [View Full Documentation Report](https://drive.google.com/file/d/1siI4pnidHQjHrfEO-c_uXuOs4iHmOYKz/view?usp=drive_link)
 * 🌐 **Developer Portfolio:** [Krishna Mohan Deo Portfolio](https://krishnamohandeo.netlify.app)

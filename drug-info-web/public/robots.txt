@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://krishnamohandeo.netlify.app/sitemap.xml
+Sitemap: https://med-ai-lncts.vercel.app/sitemap.xml

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemap.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://krishnamohandeo.netlify.app/</loc>
+    <loc>https://med-ai-lncts.vercel.app/</loc>
     <lastmod>2026-08-19</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://krishnamohandeo.netlify.app/features.html</loc>
+    <loc>https://med-ai-lncts.vercel.app/features.html</loc>
     <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
