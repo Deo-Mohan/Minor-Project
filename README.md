@@ -5,7 +5,13 @@
 [![OpenFDA API](https://img.shields.io/badge/FDA_Database-OpenFDA-0268B8?style=for-the-badge&logo=usps&logoColor=white)](https://open.fda.gov/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
-**MediBot AI** is an enterprise-grade AI healthcare platform designed to bridge the gap between complex pharmaceutical databases and everyday users. Powered by **Google Gemini 2.5 Flash** and the **OpenFDA Clinical Database**, MediBot AI delivers instant medication safety checks, pill vision recognition, drug-interaction analysis, symptom triage, and an integrated Telegram Bot.
+---
+
+## 📌 Project Resources & Documentation Links
+
+* 📊 **Project Presentation (Slide Deck):** [View Google Slides PPT](https://docs.google.com/presentation/d/1OejJaCkXxptywICHllaZZquBr0BvTzJn/edit?usp=drive_link&ouid=100102985203872277815&rtpof=true&sd=true)
+* 📄 **Technical Project Documentation:** [View Full Documentation Report](https://drive.google.com/file/d/1siI4pnidHQjHrfEO-c_uXuOs4iHmOYKz/view?usp=drive_link)
+* 🌐 **Developer Portfolio:** [Krishna Mohan Deo Portfolio](https://krishnamohandeo.netlify.app)
 
 ---
 
