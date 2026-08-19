@@ -11,7 +11,7 @@
 
 * 🚀 **Live Production Web Application:** [https://med-ai-lncts.vercel.app/](https://med-ai-lncts.vercel.app/)
 * 📊 **Project Presentation (Slide Deck):** [View Google Slides PPT](https://docs.google.com/presentation/d/1OejJaCkXxptywICHllaZZquBr0BvTzJn/edit?usp=drive_link&ouid=100102985203872277815&rtpof=true&sd=true)
-* 📄 **Technical Project Documentation:** [View Full Documentation Report](https://drive.google.com/file/d/1siI4pnidHQjHrfEO-c_uXuOs4iHmOYKz/view?usp=drive_link)
+* 📄 **Technical Project Documentation:** [View Full Documentation Report](https://drive.google.com/file/d/1siI4pnidHQjHrfEO-c_uXuOs4iHmOYKz/view?usp=sharing)
 * 🌐 **Developer Portfolio:** [Krishna Mohan Deo Portfolio](https://krishnamohandeo.netlify.app)
 
 ---
