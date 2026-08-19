@@ -335,7 +335,7 @@ app.post('/api/telegram-webhook', async (req, res) => {
         if (update && update.message && update.message.text) {
             const chatId = update.message.chat.id;
             const userMsg = update.message.text.trim();
-            const botToken = process.env.TELEGRAM_BOT_TOKEN;
+            const botToken = process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_TOKEN;
 
             if (!botToken) {
                 console.error("⚠️ TELEGRAM_BOT_TOKEN missing in environment variables.");
@@ -388,11 +388,11 @@ Give a clear, highly readable, structured, and helpful response. Use Telegram ma
 
 // --- Route 10: Set Telegram Webhook Helper ---
 app.get('/api/set-telegram-webhook', async (req, res) => {
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const botToken = process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_TOKEN;
     const appUrl = req.query.url || `https://${req.get('host')}`;
     
     if (!botToken) {
-        return res.status(400).json({ error: "TELEGRAM_BOT_TOKEN is not set in environment variables." });
+        return res.status(400).json({ error: "TELEGRAM_BOT_TOKEN or TELEGRAM_TOKEN is not set in environment variables." });
     }
 
     const webhookUrl = `${appUrl}/api/telegram-webhook`;
