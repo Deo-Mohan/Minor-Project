@@ -1,11 +1,15 @@
 const sqlite3 = require('sqlite3').verbose();
 const { open } = require('sqlite');
 
+const path = require('path');
+const os = require('os');
+
 let db;
 
 async function setupDatabase() {
+  const dbPath = process.env.VERCEL ? path.join(os.tmpdir(), 'web_database.db') : 'web_database.db';
   db = await open({
-    filename: 'web_database.db',
+    filename: dbPath,
     driver: sqlite3.Database
   });
 
